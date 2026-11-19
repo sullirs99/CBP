@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campaign Planner</title>
+
+<style>
+  :root {
+    --background: #24113f;
+    --surface: #42256b;
+    --surface-alt: #52317f;
+    --border: #a782d8;
+    --accent: #00c4d4;
+    --mint: #a3fff3;
+    --purple: #b78aff;
+    --purple-light: #eadcff;
+    --yellow: #ffdf00;
+    --yellow-hover: #fff176;
+    --text: #ffffff;
+    --muted: #eee5fa;
+    --warning: #ffe3a8;
+    --negative: #ffd1da;
+
+    font-family: system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    background: var(--background);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px;
+    color: var(--text);
+    background:
+      radial-gradient(
+        ellipse at top right,
+        rgba(183, 138, 255, 0.35),
+        transparent 60%
+      ),
+      var(--background);
+    background-attachment: fixed;
+  }
+
+  main {
+    max-width: 1800px;
+    margin: auto;
+  }
+
+  header {
+    text-align: center;
+    padding: 12px 0;
+  }
+
+  h1 {
+    margin: 12px 0 24px;
+    color: var(--mint);
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 850;
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+
+  h2 {
+    font-size: 20px;
+    color: var(--purple-light);
+  }
+
+  p, li { line-height: 1.6; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+
+  .panel, .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+  }
+
+  .metric {
+    border-top: 4px solid var(--purple);
+  }
+
+  .metric span {
+    display: block;
+    color: var(--muted);
+  }
+
+  .metric strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 26px;
+    color: var(--mint);
+    overflow-wrap: anywhere;
+  }
+
+  input, select, button {
+    font: inherit;
+    border: 1px solid #d5b8ff;
+    border-radius: 6px;
+    padding: 9px;
+  }
+
+  input, select {
+    background: #654197;
+    color: #ffffff;
+  }
+
+  input:hover, select:hover {
+    border-color: var(--mint);
+  }
+
+  input[type="number"] {
+    width: 135px;
+    text-align: right;
+  }
+
+  select { min-width: 145px; }
+
+  select option {
+    background: var(--surface);
+    color: #ffffff;
+  }
+
+  button {
+    cursor: pointer;
+    background: #d5b8ff;
+    border-color: #eadcff;
+    color: #24113f;
+    font-weight: 700;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease;
+  }
+
+  button:hover {
+    background: #eadcff;
+    border-color: #ffffff;
+  }
+
+  .join-placement {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 26px 0;
+  }
+
+  .join-placement-bottom {
+    margin-bottom: 4px;
+  }
+
+  .join-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 1050px;
+    min-height: 88px;
+    padding: 22px 32px;
+    border: 2px solid var(--yellow);
+    border-radius: 12px;
+    background: var(--yellow);
+    color: #24113f;
+    cursor: pointer;
+    font-size: clamp(20px, 2.5vw, 30px);
+    font-weight: 850;
+    line-height: 1.3;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(255, 223, 0, 0.20);
+    animation: join-pulse 4s ease-in-out infinite;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease;
+  }
+
+  .join-button:visited {
+    color: #24113f;
+  }
+
+  .join-button:hover,
+  .join-button:focus-visible {
+    animation: none;
+    opacity: 1;
+    background: var(--yellow-hover);
+    border-color: var(--yellow-hover);
+    color: #24113f;
+    box-shadow: 0 0 20px rgba(255, 223, 0, 0.35);
+  }
+
+  @keyframes join-pulse {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 8px rgba(255, 223, 0, 0.15);
+    }
+
+    50% {
+      opacity: 0.78;
+      box-shadow: 0 0 24px rgba(255, 223, 0, 0.40);
+    }
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  summary:focus-visible,
+  .scroll:focus-visible,
+  .join-button:focus-visible {
+    outline: 3px solid var(--mint);
+    outline-offset: 4px;
+  }
+
+  .scroll {
+    overflow: auto;
+    max-height: 70vh;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    scrollbar-color: var(--purple) var(--surface);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+
+  caption {
+    text-align: left;
+    padding: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  th, td {
+    padding: 11px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th {
+    background: var(--accent);
+    color: #080015;
+    border-bottom-color: #008d9b;
+    white-space: normal;
+    min-width: 110px;
+  }
+
+  #projection th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--surface-alt);
+  }
+
+  tbody tr:hover td {
+    background: #674193;
+  }
+
+  .negative {
+    color: var(--negative);
+  }
+
+  .notice {
+    color: var(--warning);
+    font-weight: 600;
+  }
+
+  #status {
+    min-height: 24px;
+  }
+
+  summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--purple-light);
+  }
+
+  details[open] summary {
+    margin-bottom: 16px;
+  }
+
+  ::selection {
+    background: #d5b8ff;
+    color: #24113f;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .panel { padding: 14px; }
+    .metric strong { font-size: 23px; }
+
+    .join-button {
+      min-height: 80px;
+      padding: 20px 16px;
+      border-radius: 10px;
+    }
+
+    .join-placement {
+      margin: 22px 0;
+    }
+
+    .join-placement-bottom {
+      margin-bottom: 4px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button, .join-button {
+      animation: none;
+      transition: none;
+      opacity: 1;
+    }
+  }
+</style>
+</head>
+
+<body>
+<main>
+  <header>
+    <h1>ClickBaitPays Campaign Planner</h1>
+
+    <div class="join-placement">
+      <a
+        class="join-button"
+        href="https://clickbaitpays.me/?ref=rsulliva"
+        target="_blank"
+        rel="noopener noreferrer sponsored">
+        Click Here and Start Earning Today!
+      </a>
+    </div>
+
+    <p class="muted">
+      Choose your first-cycle campaigns and plan withdrawals.
+      All later cycles recalculate automatically.
+    </p>
+  </header>
+
+  <section class="panel" aria-label="Planner instructions">
+    <p>
+      In the chart below, edit campaign selections in cycle 1 and
+      withdrawal requests in any cycle.
+      No separate starting-cash input is required.
+    </p>
+
+    <p class="small muted">
+      Required initial funding equals cycle 1 campaign purchases
+      plus activation fees. No additional funding is injected later.
+      Defaults to one Level 1 campaign.
+    </p>
+
+    <p class="small muted">
+      Fixed: 31 cycles illustrated · 18 days per cycle ·
+      12 earning days per campaign ·
+      10% withdrawal fee · Maximum 3 campaigns per cycle.
+    </p>
+
+    <button id="clearWithdrawals" type="button">
+      Clear withdrawals
+    </button>
+
+    <p
+      id="status"
+      class="notice"
+      role="status"
+      aria-live="polite">
+    </p>
+  </section>
+
+  <section class="metrics" aria-label="Projection summary">
+    <div class="metric">
+      <span>Required initial funding</span>
+      <strong id="initialFunding"></strong>
+    </div>
+
+    <div class="metric">
+      <span>Ending account cash</span>
+      <strong id="endingCash"></strong>
+    </div>
+
+    <div class="metric">
+      <span>Total withdrawals received</span>
+      <strong id="totalReceived"></strong>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Financial projection</h2>
+
+    <p class="small muted">
+      Light purple fields are editable. Withdrawals occur after each
+      cycle pays out and before the next cycle is funded.
+      Enter the gross amount to remove from the account; you receive
+      that amount less the 10% fee.
+      Requests exceeding available cash are capped.
+    </p>
+
+    <div class="join-placement">
+      <a
+        class="join-button"
+        href="https://clickbaitpays.me/?ref=rsulliva"
+        target="_blank"
+        rel="noopener noreferrer sponsored">
+        Click Here and Start Earning Today!
+      </a>
+    </div>
+
+    <div
+      class="scroll"
+      tabindex="0"
+      role="region"
+      aria-label="Scrollable financial projection">
+
+      <table id="projection">
+        <caption>
+          Campaign amounts are purchase costs. Each level's activation
+          fee is charged only once across the projection.
+          Total duration: 558 days.
+        </caption>
+
+        <thead>
+          <tr>
+            <th scope="col">Total Months</th>
+            <th scope="col">Cycle</th>
+            <th scope="col">Total Days</th>
+            <th scope="col">Campaign 1</th>
+            <th scope="col">Campaign 2</th>
+            <th scope="col">Campaign 3</th>
+            <th scope="col">Campaign Activation Cost</th>
+            <th scope="col">Total Cost of All Campaigns</th>
+            <th scope="col">Earnings at Completion</th>
+            <th scope="col">Total Profit From Cycle</th>
+            <th scope="col">Cash Before Withdrawal</th>
+            <th scope="col">Withdrawal Requested (Gross)</th>
+            <th scope="col">Actual Withdrawal (Gross)</th>
+            <th scope="col">Withdrawal Fee</th>
+            <th scope="col">Withdrawal Received (Net)</th>
+            <th scope="col">Cash After Withdrawal</th>
+            <th scope="col">Next Campaign + Activation Cost</th>
+            <th scope="col">Cash Reserve After Next Funding</th>
+            <th scope="col">
+              Current Cycle Funding Surplus/(Shortfall)
+            </th>
+          </tr>
+        </thead>
+
+        <tbody id="projectionBody"></tbody>
+      </table>
+    </div>
+
+    <div class="join-placement join-placement-bottom">
+      <a
+        class="join-button"
+        href="https://clickbaitpays.me/?ref=rsulliva"
+        target="_blank"
+        rel="noopener noreferrer sponsored">
+        Click Here and Start Earning Today!
+      </a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>
+        Fixed campaign assumptions and calculation rules
+      </summary>
+
+      <div class="scroll">
+        <table>
+          <caption>
+            Read-only assumptions. Gross earnings use 12 earning days.
+          </caption>
+
+          <thead>
+            <tr>
+              <th scope="col">Level</th>
+              <th scope="col">Campaign Cost</th>
+              <th scope="col">One-Time Activation Fee</th>
+              <th scope="col">Ads/Day</th>
+              <th scope="col">Earnings/Click</th>
+              <th scope="col">Gross Campaign Earnings</th>
+            </tr>
+          </thead>
+
+          <tbody id="assumptionsBody"></tbody>
+        </table>
+      </div>
+
+      <ul class="small muted">
+        <li>
+          Required initial funding = first-cycle campaign purchases
+          + first-cycle activation fees.
+        </li>
+        <li>
+          Multiple campaigns at the same newly activated level incur
+          only one activation fee.
+        </li>
+        <li>
+          Gross campaign earnings = ads/day × earnings/click × 12 days.
+        </li>
+        <li>
+          Cycle profit = gross earnings − campaign purchases
+          − activation fees. Withdrawal fees are shown separately.
+        </li>
+        <li>
+          Later cycles select the affordable combination of up to three
+          campaigns with the highest gross earnings minus purchase costs,
+          matching the original planner's selection rule.
+          Activation fees are included when checking affordability.
+        </li>
+        <li>
+          Cash before withdrawal = opening cash − campaign outlay
+          + gross earnings.
+        </li>
+        <li>
+          Actual gross withdrawal = the smaller of the withdrawal
+          request and available cash.
+          Net received = actual gross withdrawal − the 10% fee.
+        </li>
+        <li>
+          Cash after withdrawal funds the next cycle.
+          Unspent cash carries forward; no borrowing or additional
+          deposits occur.
+        </li>
+        <li>
+          Cash reserve = cash after withdrawal − next cycle outlay.
+          The final row has no next-cycle funding commitment.
+        </li>
+        <li>
+          Funding surplus/(shortfall) = current gross earnings
+          − actual gross withdrawal − next cycle outlay.
+          A negative amount means carried cash helps fund the next cycle.
+        </li>
+        <li>
+          Months use a 365/12-day average month.
+          Money is calculated in integer cents, with withdrawal fees
+          rounded to the nearest cent.
+        </li>
+        <li>
+          If all first-cycle campaigns are set to None,
+          initial funding is zero and no campaigns run.
+        </li>
+      </ul>
+    </details>
+
+    <p class="small muted">
+      Illustrative projection using fixed assumptions, not a guarantee
+      of earnings. Inputs reset when the page reloads.
+    </p>
+  </section>
+
+  <noscript>
+    <p class="notice">
+      Enable JavaScript to use the interactive campaign planner.
+    </p>
+  </noscript>
+</main>
+
+<script>
+"use strict";
+
+// Fixed assumptions. Monetary values use integer cents.
+const RULES = Object.freeze({
+  cycles: 31,
+  cycleDays: 18,
+  earningDays: 12,
+  withdrawalFee: 0.10,
+  averageMonth: 365 / 12
+});
+
+const LEVELS = Object.freeze([
+  { cost: 0,      fee: 0,     ads: 0,  click: 0 },
+  { cost: 1300,   fee: 100,   ads: 3,  click: 48 },
+  { cost: 7700,   fee: 700,   ads: 3,  click: 283 },
+  { cost: 15000,  fee: 1500,  ads: 3,  click: 540 },
+  { cost: 30000,  fee: 3000,  ads: 5,  click: 648 },
+  { cost: 60000,  fee: 6000,  ads: 6,  click: 1080 },
+  { cost: 120000, fee: 12000, ads: 10, click: 1296 },
+  { cost: 240000, fee: 24000, ads: 20, click: 1350 }
+].map(level => Object.freeze({
+  ...level,
+  payout: level.ads * level.click * RULES.earningDays
+})));
+
+const state = {
+  firstMix: [1, 0, 0],
+  withdrawals: Array(RULES.cycles).fill(0)
+};
+
+const byId = id => document.getElementById(id);
+
+const currency = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD"
+});
+
+const money = cents => currency.format(cents / 100);
+
+// Charge activation once per newly used level.
+function quote(mix, activated) {
+  const purchase = mix.reduce(
+    (sum, level) => sum + LEVELS[level].cost,
+    0
+  );
+
+  const activation = [...new Set(mix)].reduce(
+    (sum, level) =>
+      sum + (activated.has(level) ? 0 : LEVELS[level].fee),
+    0
+  );
+
+  const payout = mix.reduce(
+    (sum, level) => sum + LEVELS[level].payout,
+    0
+  );
+
+  return {
+    purchase,
+    activation,
+    cost: purchase + activation,
+    payout,
+    gain: payout - purchase
+  };
+}
+
+// Check every combination, including repeats and empty slots.
+function bestMix(cash, activated) {
+  let best = [0, 0, 0];
+  let bestScore = -Infinity;
+
+  for (let z = 0; z < 512; z++) {
+    const mix = [
+      z % 8,
+      Math.floor(z / 8) % 8,
+      Math.floor(z / 64)
+    ];
+
+    const result = quote(mix, activated);
+
+    if (result.cost <= cash && result.gain > bestScore) {
+      best = mix;
+      bestScore = result.gain;
+    }
+  }
+
+  return best;
+}
+
+function project() {
+  const activated = new Set();
+
+  // Initial funding is derived from first-row selections only.
+  const initialFunding = quote(state.firstMix, activated).cost;
+  let cash = initialFunding;
+  const rows = [];
+
+  for (let index = 0; index < RULES.cycles; index++) {
+    const mix = index === 0
+      ? [...state.firstMix]
+      : bestMix(cash, activated);
+
+    const result = quote(mix, activated);
+
+    if (result.cost > cash) {
+      throw new Error(
+        "Campaign costs exceed available cycle funding."
+      );
+    }
+
+    mix.forEach(level => {
+      if (level !== 0) activated.add(level);
+    });
+
+    const before = cash - result.cost + result.payout;
+    const requested = state.withdrawals[index];
+    const withdrawal = Math.min(requested, before);
+    const fee = Math.round(withdrawal * RULES.withdrawalFee);
+
+    cash = before - withdrawal;
+
+    rows.push({
+      cycle: index + 1,
+      mix,
+      ...result,
+      profit: result.payout - result.cost,
+      before,
+      requested,
+      withdrawal,
+      fee,
+      received: withdrawal - fee,
+      after: cash
+    });
+  }
+
+  rows.forEach((row, index) => {
+    row.nextCost = rows[index + 1]?.cost ?? 0;
+    row.reserve = row.after - row.nextCost;
+    row.funding = row.payout - row.withdrawal - row.nextCost;
+  });
+
+  return { initialFunding, rows };
+}
+
+function campaignSelect(slot, selected) {
+  const options = LEVELS.map((level, index) => {
+    const label = index === 0
+      ? "None"
+      : `L${index} — ${money(level.cost)}`;
+
+    return `
+      <option value="${index}"
+        ${index === selected ? "selected" : ""}>
+        ${label}
+      </option>
+    `;
+  }).join("");
+
+  return `
+    <select data-slot="${slot}"
+      aria-label="Cycle 1, campaign ${slot + 1}">
+      ${options}
+    </select>
+  `;
+}
+
+function amountCell(value) {
+  return `
+    <td${value < 0 ? ' class="negative"' : ""}>
+      ${money(value)}
+    </td>
+  `;
+}
+
+function render(message = "") {
+  const { initialFunding, rows } = project();
+
+  byId("projectionBody").innerHTML = rows.map((row, index) => {
+    const days = row.cycle * RULES.cycleDays;
+
+    const campaignCells = row.mix.map((level, slot) => {
+      const content = index === 0
+        ? campaignSelect(slot, level)
+        : level === 0
+          ? "—"
+          : `L${level} — ${money(LEVELS[level].cost)}`;
+
+      return `<td>${content}</td>`;
+    }).join("");
+
+    const capped = row.requested > row.withdrawal;
+
+    return `
+      <tr>
+        <td>${(days / RULES.averageMonth).toFixed(1)}</td>
+        <td>${row.cycle}</td>
+        <td>${days}</td>
+        ${campaignCells}
+        ${amountCell(row.activation)}
+        ${amountCell(row.cost)}
+        ${amountCell(row.payout)}
+        ${amountCell(row.profit)}
+        ${amountCell(row.before)}
+
+        <td>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            data-withdrawal="${index}"
+            value="${(row.requested / 100).toFixed(2)}"
+            aria-label="Gross withdrawal requested after cycle ${row.cycle}">
+        </td>
+
+        <td${capped
+          ? ' class="notice" title="Request capped at available cash"'
+          : ""}>
+          ${money(row.withdrawal)}
+          ${capped ? " (capped)" : ""}
+        </td>
+
+        ${amountCell(row.fee)}
+        ${amountCell(row.received)}
+        ${amountCell(row.after)}
+        ${amountCell(row.nextCost)}
+        ${amountCell(row.reserve)}
+        ${amountCell(row.funding)}
+      </tr>
+    `;
+  }).join("");
+
+  byId("initialFunding").textContent = money(initialFunding);
+
+  byId("endingCash").textContent =
+    money(rows[rows.length - 1].after);
+
+  byId("totalReceived").textContent = money(
+    rows.reduce((sum, row) => sum + row.received, 0)
+  );
+
+  const cappedCount = rows.filter(
+    row => row.requested > row.withdrawal
+  ).length;
+
+  const notes = [];
+
+  if (message) {
+    notes.push(message);
+  }
+
+  if (initialFunding === 0) {
+    notes.push(
+      "Select at least one campaign in cycle 1 to begin."
+    );
+  }
+
+  if (cappedCount > 0) {
+    notes.push(
+      `${cappedCount} withdrawal request(s) capped at available cash. ` +
+      "Original requests are retained and reapplied when inputs change."
+    );
+  }
+
+  byId("status").textContent = notes.join(" ");
+}
+
+function readCents(input) {
+  if (input.value.trim() === "") {
+    throw new Error(
+      "Enter an amount; use 0 for no withdrawal."
+    );
+  }
+
+  const value = Number(input.value);
+  const cents = Math.round(value * 100);
+
+  if (
+    !Number.isFinite(value) ||
+    value < 0 ||
+    !Number.isSafeInteger(cents) ||
+    Math.abs(value * 100 - cents) > 0.000001
+  ) {
+    throw new Error(
+      "Enter a nonnegative amount with at most two decimal places."
+    );
+  }
+
+  return cents;
+}
+
+function update(apply, undo, focusSelector) {
+  let message = "";
+
+  try {
+    apply();
+    project();
+  } catch (error) {
+    undo();
+    message = error.message;
+  }
+
+  render(message);
+
+  if (focusSelector) {
+    const control = byId("projectionBody")
+      .querySelector(focusSelector);
+
+    if (control) {
+      control.focus({ preventScroll: true });
+    }
+  }
+}
+
+// Only cycle 1 has editable campaign selectors.
+byId("projectionBody").addEventListener("change", event => {
+  const input = event.target;
+
+  if (input.matches("select[data-slot]")) {
+    const slot = Number(input.dataset.slot);
+    const previous = state.firstMix[slot];
+
+    update(
+      () => {
+        const level = Number(input.value);
+
+        if (
+          !Number.isInteger(level) ||
+          level < 0 ||
+          level > 7
+        ) {
+          throw new Error(
+            "Select a valid campaign level."
+          );
+        }
+
+        state.firstMix[slot] = level;
+      },
+      () => {
+        state.firstMix[slot] = previous;
+      },
+      `select[data-slot="${slot}"]`
+    );
+
+    return;
+  }
+
+  if (input.matches("input[data-withdrawal]")) {
+    const index = Number(input.dataset.withdrawal);
+    const previous = state.withdrawals[index];
+
+    update(
+      () => {
+        state.withdrawals[index] = readCents(input);
+      },
+      () => {
+        state.withdrawals[index] = previous;
+      },
+      `input[data-withdrawal="${index}"]`
+    );
+  }
+});
+
+byId("clearWithdrawals").addEventListener("click", () => {
+  state.withdrawals.fill(0);
+  render("All withdrawal requests cleared.");
+});
+
+// Campaign assumptions are read-only.
+byId("assumptionsBody").innerHTML = LEVELS.slice(1)
+  .map((level, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      ${amountCell(level.cost)}
+      ${amountCell(level.fee)}
+      <td>${level.ads}</td>
+      ${amountCell(level.click)}
+      ${amountCell(level.payout)}
+    </tr>
+  `)
+  .join("");
+
+render();
+</script>
+</body>
+</html>
